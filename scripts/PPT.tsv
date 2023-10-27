@@ -1,0 +1,51 @@
+Species	Common Name	Taxon	Cell Type	Sex	IUCN Status	Production Year	HiFi	ONT	OmniC	RNAseq	Karyotype
+Papio anubis	Olive Baboon	Old World Monkey	Fibroblast	male	LC	Phase 1					
+Mandrillus leucophaeus	Drill	Old World Monkey	Fibroblast	male	EN	Phase 1					
+Macaca nemestrina	Southern Pig-tailed Macaque	Old World Monkey	Fibroblast	female	VU	Phase 1					
+Cercopithecus cephus	Moustached Monkey	Old World Monkey	Fibroblast	male	LC	Phase 1					
+Colobus angolensis	Angolan Colobus	Old World Monkey	Fibroblast	male	VU	Phase 1					
+Leontopithecus rosalia	Golden Lion Tamarin	New World Monkey	B-Lymphocyte	male	EN	Phase 1					
+Lagothrix lagotricha	Common Woolly Monkey	New World Monkey	Fibroblast	female	VU	Phase 1					
+Pithecia pithecia	White-faced Saki	New World Monkey	Fibroblast	male	LC	Phase 1					
+Eulemur fulvus	Brown Lemur	Lemur	Fibroblast	male	VU	Phase 1					
+Eulemur rubriventer	Red-bellied Lemur	Lemur	Fibroblast	female	VU	Phase 1					
+Eulemur macaco	Black Lemur	Lemur	Fibroblast	male	EN	Phase 1					
+Macaca nigra	Celebes Crested Macaque	Old World Monkey	Fibroblast		CR	Phase 2					
+Eulemur mongoz	Mongoose Lemur	Lemur	Fibroblast		CR	Phase 2					
+Varecia rubra	Red Ruffed Lemur	Lemur	Fibroblast		CR	Phase 2					
+Propithecus tattersalli	Golden-crowned Sifaka	Lemur	Fibroblast		CR	Phase 2					
+Chlorocebus pygerythrus	Vervet Monkey	Old World Monkey	B-Lymphocyte; Fibroblast		LC	Phase 2					
+Propithecus diadema	Diademed Sifaka	Lemur	Fibroblast		CR	Phase 2					
+Cercocebus torquatus	Red-capped Mangabey	Old World Monkey	Fibroblast		EN	Phase 2					
+Macaca silenus	Lion-tailed Macaque	Old World Monkey	Fibroblast		EN	Phase 2					
+Colobus polykomos	King Colobus	Old World Monkey	Fibroblast		EN	Phase 2					
+Nasalis larvatus	Proboscis Monkey	Old World Monkey	Fibroblast		EN	Phase 2					
+Hylobates lar	Lar Gibbon	Lesser Ape	Fibroblast		EN	Phase 2					
+Macaca fuscata	Japanese Macaque	Old World Monkey	B-Lymphocyte		LC	Phase 2					
+Hylobates agilis	Agile Gibbon	Lesser Ape	B-Lymphocyte; Fibroblast		EN	Phase 2					
+Galago senegalensis	Northern Lesser Galago	Galagos/Lorises	Fibroblast		LC	Phase 2					
+Nomascus gabriellae	Red-cheeked Gibbon	Lesser Ape	B-Lymphocyte; Fibroblast		EN	Phase 2					
+Saimiri oerstedii	Black-crowned Central American Squirrel Monkey	New World Monkey	Fibroblast		EN	Phase 2					
+Ateles geoffroyi	Geoffroy's Spider Monkey	New World Monkey	Fibroblast		EN	Phase 2					
+Eulemur coronatus	Crowned Lemur	Lemur	Fibroblast		EN	Phase 2					
+Mirza coquereli	Coquerel's Giant Mouse Lemur	Lemur	Fibroblast		EN	Phase 2					
+Loris tardigradus	Red Slender Loris	Galagos/Lorises	Fibroblast		EN	Phase 2					
+Mandrillus sphinx	Mandrill	Old World Monkey	Fibroblast		VU	Phase 3					
+Allochrocebus lhoesti	L'Hoest's Monkey	Old World Monkey	Fibroblast		VU	Phase 3					
+Miopithecus talapoin	Southern Talapoin Monkey	Old World Monkey	Fibroblast		VU	Phase 3					
+Cebuella pygmaea	Western Pygmy Marmoset	New World Monkey	Fibroblast		VU	Phase 3					
+Callimico goeldii	Goeldi's Monkey	New World Monkey	Fibroblast		VU	Phase 3					
+Hapalemur griseus	Eastern Lesser Bamboo Lemur	Lemur	Fibroblast		VU	Phase 3					
+Macaca thibetana	Tibetan Macaque	Old World Monkey	Fibroblast		NT	Phase 3					
+Cercopithecus petaurista	Spot-nosed Monkey	Old World Monkey	Fibroblast		NT	Phase 3					
+Cercopithecus wolfi	Wolf's Monkey	Old World Monkey	Fibroblast		NT	Phase 3					
+Alouatta sara	Bolivian Red Howler Monkey	New World Monkey	Fibroblast		NT	Phase 3					
+Papio hamadryas	Hamadryas Baboon	Old World Monkey	Fibroblast		LC	Phase 3					
+Papio cynocephalus	Yellow Baboon	Old World Monkey	Fibroblast		LC	Phase 3					
+Cercopithecus neglectus	De Brazza's Monkey	Old World Monkey	Fibroblast		LC	Phase 3					
+Callithrix geoffroyi	Geoffroy's Tufted-ear Marmoset	New World Monkey	B-Lymphocyte; Fibroblast		LC	Phase 3					
+Leontocebus fuscicollis	Saddleback Tamarin	New World Monkey	Fibroblast		LC	Phase 3					
+Aotus vociferans	Spix's Night Monkey	New World Monkey	Fibroblast		LC	Phase 3					
+Plecturocebus cupreus	Coppery Titi Monkey	New World Monkey	Fibroblast		LC	Phase 3					
+Microcebus murinus	Grey Mouse Lemur	Lemur	Fibroblast		LC	Phase 3					
+Galago moholi	Southern Lesser Galago	Galagos/Lorises	Fibroblast		LC	Phase 3					
