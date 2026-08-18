@@ -1,0 +1,4 @@
+build_id,hal_path,included_genome_ids,release_date,notes
+build1,comparative/hal/all_species_build1.hal,PR00232_1.0,2026-01-15,Initial build - Drill only
+build2,comparative/hal/all_species_build2.hal,PR00232_1.1,2026-02-01,Drill re-curated (misjoin fix)
+build3,comparative/hal/all_species_build3.hal,PR00232_2.0:PR00036_1.0,2026-04-10,Drill v2.0 (new ONT data) + Olive Baboon added

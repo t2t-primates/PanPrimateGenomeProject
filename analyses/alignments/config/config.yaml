@@ -1,0 +1,22 @@
+# Configuration for the Progressive Cactus alignment pipeline (Snakefile).
+
+# S3 bucket hosting the released data (no credentials required, --no-sign-request)
+bucket: primate-t2t-genomics-open
+
+# Path to the sample data manifest, relative to repo root or an S3-synced copy
+manifest_path: ../../manifests/sample_data_manifest.csv
+
+# Identifier for this alignment build - must match a row you intend to add
+# to comparative/comparative_manifest.csv once the run completes
+build_id: build1
+
+# Species tree in Newick format, covering every accession_id in the manifest
+# that should be included in this build. See comparative/README.md for how
+# build membership is tracked.
+species_tree_newick: config/species_tree.nwk
+
+# Container image for Cactus + HAL toolkit (pinned version for reproducibility)
+cactus_container: docker://quay.io/comparative-genomics-toolkit/cactus:v2.9.3
+
+# Cores available to a single Cactus alignment job
+cactus_threads: 32

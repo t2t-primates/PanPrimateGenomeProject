@@ -1,0 +1,21 @@
+{
+  "species_id": "mandrillus_leucophaeus",
+  "accession_id": "PR00232",
+  "sex": "male",
+  "sequencing": {
+    "ont": [
+      { "run_id": "run1", "instrument": "PromethION 24", "chemistry": "R10.4.1", "run_accession": "SRR00000010" },
+      { "run_id": "run2", "instrument": "PromethION 2 Solo", "chemistry": "R10.4.1", "run_accession": "SRR00000014" }
+    ],
+    "pacbio_hifi": [
+      { "run_id": "run1", "instrument": "Revio", "chemistry": "SMRTbell prep kit 3.0", "run_accession": "SRR00000011" }
+    ],
+    "chromatin_capture": [
+      { "run_id": "run1", "method": "omni_c", "kit_version": "Dovetail Omni-C v2", "run_accession": "SRR00000012" }
+    ],
+    "kinnex_rna": [
+      { "run_id": "run1", "instrument": "Revio", "run_accession": "SRR00000013" }
+    ]
+  },
+  "ncbi_biosample": "SAMN00000001"
+}
