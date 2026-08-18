@@ -12,7 +12,7 @@ Every species and every released version is indexed in one manifest file. Start 
 
 ```bash
 aws s3 cp --no-sign-request \
-  s3://primate-t2t-genomics-open/manifests/sample_data_manifest.csv - \
+  s3://panprimate-t2t/manifests/sample_data_manifest.csv - \
   | head -1
 ```
 
@@ -20,7 +20,7 @@ Find every currently-latest released genome and its primary assembly path:
 
 ```bash
 aws s3 cp --no-sign-request \
-  s3://primate-t2t-genomics-open/manifests/sample_data_manifest.csv - \
+  s3://panprimate-t2t/manifests/sample_data_manifest.csv - \
   | awk -F, '$13 == "released" && $4 == "TRUE" { print $1, $16 }'
 ```
 
@@ -30,7 +30,7 @@ This should print `PR00232_2.0` and its `genome_pri` S3 path - that's the genome
 
 ```bash
 aws s3 ls --no-sign-request --recursive \
-  s3://primate-t2t-genomics-open/species_data/PR00232/ \
+  s3://panprimate-t2t/species_data/PR00232/ \
   | head -20
 ```
 
@@ -43,17 +43,17 @@ This is the core cloud-native pattern this dataset is built around: every indexe
 ```bash
 # A region of aligned HiFi reads
 samtools view \
-  https://primate-t2t-genomics-open.s3.amazonaws.com/species_data/PR00232/v2.0/alignments/PR00232_2.0.hifi.sorted.bam \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v2.0/alignments/PR00232_2.0.hifi.sorted.bam \
   chr7:1000000-1050000
 
 # The same region's variant calls
 bcftools view \
-  https://primate-t2t-genomics-open.s3.amazonaws.com/species_data/PR00232/v2.0/variants/PR00232_2.0.vcf.gz \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v2.0/variants/PR00232_2.0.vcf.gz \
   chr7:1000000-1050000
 
 # The same region's gene annotation
 tabix \
-  https://primate-t2t-genomics-open.s3.amazonaws.com/species_data/PR00232/v2.0/annotation/PR00232_2.0.pri.gff3.gz \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v2.0/annotation/PR00232_2.0.pri.gff3.gz \
   chr7:1000000-1050000
 ```
 
@@ -63,7 +63,7 @@ Each command downloaded only the bytes for that interval - not the full multi-gi
 
 ```bash
 aws s3 cp --no-sign-request \
-  s3://primate-t2t-genomics-open/species_data/PR00232/metadata/PR00232_sample_metadata.json - \
+  s3://panprimate-t2t/species_data/PR00232/metadata/PR00232_sample_metadata.json - \
   | python3 -m json.tool
 ```
 
@@ -78,7 +78,7 @@ This gives you per-run sequencing detail (instrument, chemistry, run accession) 
 ```bash
 # Generate one job per released sample from the manifest
 aws s3 cp --no-sign-request \
-  s3://primate-t2t-genomics-open/manifests/sample_data_manifest.csv - \
+  s3://panprimate-t2t/manifests/sample_data_manifest.csv - \
   | awk -F, '$13 == "released" && $4 == "TRUE" { print $1 }' \
   > released_genome_ids.txt
 

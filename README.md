@@ -36,7 +36,7 @@ The complete collection - spanning raw sequencing signals through whole-genome a
 Inspect the S3 bucket hierarchy via AWS CLI:
 
 ```bash
-aws s3 ls s3://primate-t2t-genomics-open/species_data/ --no-sign-request
+aws s3 ls s3://panprimate-t2t/species_data/ --no-sign-request
 ```
 
 Full bucket layout, species IDs, and per-sample metadata: [README_dataset.md](README_dataset.md).

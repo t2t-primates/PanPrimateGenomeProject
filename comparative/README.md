@@ -11,7 +11,7 @@ Whole-genome alignments that span **multiple species** — HAL and comparative M
 ## Layout
 
 ```text
-s3://primate-t2t-genomics-open/
+s3://primate-t2t/
 └── comparative/
     ├── comparative_manifest.csv     # one row per HAL build — which genome_ids it includes
     ├── hal/

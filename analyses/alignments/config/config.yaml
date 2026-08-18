@@ -1,7 +1,7 @@
 # Configuration for the Progressive Cactus alignment pipeline (Snakefile).
 
 # S3 bucket hosting the released data (no credentials required, --no-sign-request)
-bucket: primate-t2t-genomics-open
+bucket: panprimate-t2t
 
 # Path to the sample data manifest, relative to repo root or an S3-synced copy
 manifest_path: ../../manifests/sample_data_manifest.csv

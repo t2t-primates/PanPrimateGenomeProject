@@ -68,12 +68,12 @@ Every version a sample has ever had ships as its own row - nothing is overwritte
 ```bash
 # Pull the manifest and list every currently-latest released genome's ID and S3 path (primary assembly)
 aws s3 cp --no-sign-request \
-  s3://primate-t2t-genomics-open/manifests/sample_data_manifest.csv - \
+  s3://panprimate-t2t/manifests/sample_data_manifest.csv - \
   | awk -F, '$13 == "released" && $4 == "TRUE" { print $1, $16 }'
 
 # List every version that has ever existed for one sample
 aws s3 cp --no-sign-request \
-  s3://primate-t2t-genomics-open/manifests/sample_data_manifest.csv - \
+  s3://panprimate-t2t/manifests/sample_data_manifest.csv - \
   | awk -F, '$2 == "PR00232" { print $1, $3, $4 }'
 ```
 
@@ -86,17 +86,17 @@ All indexed files (BAM `.bai`, bgzip VCF/GFF3/BED `.tbi`, bgzip FASTA `.fai`) su
 ```bash
 # A region of aligned reads
 samtools view \
-  https://primate-t2t-genomics-open.s3.amazonaws.com/species_data/PR00232/v1.0/alignments/PR00232_1.0.hifi.sorted.bam \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v1.0/alignments/PR00232_1.0.hifi.sorted.bam \
   chr7:1000000-1050000
 
 # The same region's variant calls
 bcftools view \
-  https://primate-t2t-genomics-open.s3.amazonaws.com/species_data/PR00232/v1.0/variants/PR00232_1.0.vcf.gz \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v1.0/variants/PR00232_1.0.vcf.gz \
   chr7:1000000-1050000
 
 # The same region's gene annotation (primary assembly)
 tabix \
-  https://primate-t2t-genomics-open.s3.amazonaws.com/species_data/PR00232/v1.0/annotation/PR00232_1.0.pri.gff3.gz \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v1.0/annotation/PR00232_1.0.pri.gff3.gz \
   chr7:1000000-1050000
 ```
 
@@ -107,7 +107,7 @@ IGV and JBrowse can also load these S3 URLs directly as remote tracks, without d
 | Service | Use |
 | --- | --- |
 | **Amazon EC2** | Mount via `mountpoint-s3`/`s3fs`, or point `samtools`/`bcftools` directly at S3 URLs |
-| **AWS Batch** | Containerized jobs reading/writing `s3://primate-t2t-genomics-open/...` directly, eg. array jobs iterating over `sample_data_manifest.csv` |
+| **AWS Batch** | Containerized jobs reading/writing `s3://panprimate-t2t/...` directly, eg. array jobs iterating over `sample_data_manifest.csv` |
 | **Amazon SageMaker** | Training/processing jobs with the bucket as an S3 input channel - eg. combining raw ONT/HiFi signal with assemblies for genomic foundation model training |
 | **AWS HealthOmics** | Whole-genome alignment, variant discovery, and comparative genomics workflows using the released BAM/VCF/assembly files as inputs |
 
@@ -116,7 +116,7 @@ IGV and JBrowse can also load these S3 URLs directly as remote tracks, without d
 Data lives at:
 
 ```text
-s3://primate-t2t-genomics-open/
+s3://panprimate-t2t/
 ```
 
 No AWS credentials are required (`--no-sign-request`).
@@ -124,17 +124,17 @@ No AWS credentials are required (`--no-sign-request`).
 ```bash
 # Everything for one sample (all versions + raw data)
 aws s3 cp --no-sign-request --recursive \
-  s3://primate-t2t-genomics-open/species_data/PR00232/ .
+  s3://panprimate-t2t/species_data/PR00232/ .
 
 # Just the current released assembly (v1.0)
 aws s3 cp --no-sign-request --recursive \
-  s3://primate-t2t-genomics-open/species_data/PR00232/v1.0/ .
+  s3://panprimate-t2t/species_data/PR00232/v1.0/ .
 ```
 
 Layout:
 
 ```text
-s3://primate-t2t-genomics-open/
+s3://panprimate-t2t/
 ├── manifests/
 │   └── sample_data_manifest.csv        # one row per sample - accessions + current-version paths
 │

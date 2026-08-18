@@ -17,7 +17,7 @@
 | Latest genome version | — |
 | Accession ID | [PR00742](../../manifests/sample_data_manifest.csv) |
 | NCBI BioSample | |
-| S3 Data Location | s3://primate-t2t-genomics-open/species_data/PR00742/ *(not yet public)* |
+| S3 Data Location | s3://panprimate-t2t/species_data/PR00742/ *(not yet public)* |
 | Project phase | 3 |
 
 ## IUCN Red List
