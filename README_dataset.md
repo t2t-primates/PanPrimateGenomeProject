@@ -14,7 +14,9 @@
 
 ## Sample data manifest
 
-`manifests/sample_data_manifest.csv` is the single metadata table for the whole dataset - one row per released assembly version, with every accession and every data file location as a column. A sample that has been re-assembled or re-curated has one row per version it has ever shipped (eg. `PR00232_1.0` and `PR00232_1.1` are two separate rows), so no history is ever overwritten and every `genome_id` that was ever cited stays resolvable. Sample-identity fields (species, sex, accessions) are repeated identically across that sample's version rows. Raw data columns (`raw_ont`, `raw_pacbio_hifi`, `raw_kinnex_rna`) hold a colon-delimited (`:`) list of the run file(s) that fed that version's assembly - usually the same list across a sample's versions, but not always: raw sequencing is stored as one file per run (never merged), and if a new assembly version incorporates an additional run for a platform (eg. a second ONT run added for deeper coverage), that row's column gains the new run's path while keeping the earlier one, and the earlier version's row is left exactly as it was. `raw_chromatin_capture` follows the same colon-delimited, append-only, per-run pattern, but holds SRA run accessions rather than S3 paths - see [Chromatin Capture](#chromatin-capture-omni-c--pore-c) below. A published row is never rewritten after the fact, and no raw file is ever overwritten in place; new raw data always arrives as a new, separate run file (we use "append-only" to refer to this data method).
+`manifests/sample_data_manifest.csv` is the single metadata table for the whole dataset - one row per released assembly version, with every accession and every data file location as a column. A sample that has been re-assembled or re-curated has one row per version it has ever shipped (eg. `PR00232_1.0` and `PR00232_1.1` are two separate rows), so no history is ever overwritten and every `genome_id` that was ever cited stays resolvable. Sample-identity fields (species, sex, accessions) are repeated identically across that sample's version rows. Raw data columns (`raw_ont`, `raw_pacbio_hifi`, `raw_kinnex_rna`) hold a semicolon-delimited (`;`) list of the run file(s) that fed that version's assembly - usually the same list across a sample's versions, but not always: raw sequencing is stored as one file per run (never merged), and if a new assembly version incorporates an additional run for a platform (eg. a second ONT run added for deeper coverage), that row's column gains the new run's path while keeping the earlier one, and the earlier version's row is left exactly as it was. `raw_chromatin_capture` follows the same semicolon-delimited, append-only, per-run pattern, but holds SRA run accessions rather than S3 paths - see [Chromatin Capture](#chromatin-capture-omni-c--pore-c) below. A published row is never rewritten after the fact, and no raw file is ever overwritten in place; new raw data always arrives as a new, separate run file (we use "append-only" to refer to this data method).
+
+**Multi-value columns use `;` (semicolon) as the separator, never `:` (colon)** - S3 URIs themselves contain a colon right after the `s3` scheme (`s3://...`), so colon-joining multiple S3 paths in one cell is ambiguous/unparseable. Semicolon avoids this and is used consistently across every multi-value column, including ones (like the SRA-accession columns) that wouldn't strictly have needed it.
 
 | Index | Column | Description |
 | --- | --- | --- |
@@ -23,32 +25,48 @@
 | 3 | `genome_version` | Version of *this specific row's* assembly, eg. `1.0`, `1.1` - matches the `v<major>.<minor>/` directory in S3. |
 | 4 | `is_latest` | `TRUE` for the one row per sample that is the current/most-recent released version, `FALSE` for all superseded versions. Filter on this to get "current state of the dataset." |
 | 5 | `release_date` | Date this specific version was published, `YYYY-MM-DD`. Blank for samples with no released version yet. |
-| 6 | `species_id` | Taxonomic identifier, derived as lowercase `<genus>_<species>` - eg. `genus=Mandrillus`, `species=leucophaeus` → `species_id=mandrillus_leucophaeus`. Descriptive only - `accession_id`, not `species_id`, is the bucket path component. |
-| 7 | `genus` | Genus, capitalized (eg. `Mandrillus`) |
-| 8 | `species` | Species epithet, lowercase (eg. `leucophaeus`) |
-| 9 | `common_name` | Common species name |
-| 10 | `sex` | `male` / `female` / `unknown` |
-| 11 | `biosample` | NCBI BioSample accession |
-| 12 | `bioproject` | NCBI BioProject accession |
-| 13 | `assembly_status` | `planned` / `in_progress` / `released` |
-| 14 | `genome_hap1` | NCBI GenBank Assembly accession for the haplotype 1 assembly (e.g. `GCA_900000001.1`) — hosted at NCBI, not AWS. View at `https://www.ncbi.nlm.nih.gov/datasets/genome/<accession>/` |
-| 15 | `genome_hap2` | NCBI GenBank Assembly accession for the haplotype 2 assembly (e.g. `GCA_900000002.1`) — hosted at NCBI, not AWS. View at `https://www.ncbi.nlm.nih.gov/datasets/genome/<accession>/` |
-| 16 | `genome_pri` | S3 path to the primary assembly (longer sequence per chromosome pair; see [Primary + alternate assembly](#bucket-layout-and-download) below) |
-| 17 | `genome_alt` | S3 path to the alternate assembly (shorter sequence per chromosome pair) |
-| 18 | `annotation_pri_gff3` | S3 path to gene annotation, called on the primary assembly |
-| 19 | `annotation_alt_gff3` | S3 path to gene annotation, lifted over onto the alternate assembly |
-| 20 | `repeat_masker_pri` | S3 path to RepeatMasker output, called on the primary assembly |
-| 21 | `repeat_masker_alt` | S3 path to RepeatMasker output, called on the alternate assembly |
-| 22 | `repeat_families` | S3 path to the RepeatModeler-generated repeat family consensus library (FASTA) for this assembly — used as RepeatMasker's custom library for annotation, and also useful on its own for directly examining this species' repeat families. One consensus sequence per family; headers follow RepeatModeler's `family_name#class/family` convention (e.g. `ltr-1_family-1#LTR/ERVK`) |
-| 23 | `methylation` | S3 path to the ONT-based methylation output **directory** for this version (5mC/5hmC calls) - see [Methylation](#methylation) below |
-| 24 | `fiberseq` | S3 path to the Fiber-seq output **directory** for this version (m6A, MSPs, nucleosome calls) - see [Fiber-seq](#fiber-seq) below |
-| 25 | `variants` | S3 path to the variant calls **directory** for this version (see the file-naming table below for what's inside) |
-| 26 | `raw_ont` | Colon-delimited list of S3 paths to ONT run file(s) used for this version |
-| 27 | `raw_pacbio_hifi` | Colon-delimited list of S3 paths to PacBio HiFi run file(s) used for this version |
-| 28 | `raw_chromatin_capture` | Colon-delimited list of SRA run accessions for chromatin capture run(s) used for this version — reads are archived at NCBI/SRA (FASTQ), not hosted on AWS. See [Chromatin Capture](#chromatin-capture-omni-c--pore-c) below |
-| 29 | `raw_kinnex_rna` | Colon-delimited list of S3 paths to Kinnex RNA run file(s) used for this version |
-| 30 | `alignment_reads` | S3 path to HiFi reads aligned to the assembly |
-| 31 | `alignment_comparative` | S3 path to the comparative (MAF) alignment - see [Comparative and multi-species data](#comparative-and-multi-species-data) below |
+| 6 | `ncbi_release_date` | Date the corresponding NCBI assembly/BioSample record was made public, `YYYY-MM-DD`. Blank until NCBI submission/release. |
+| 7 | `species_id` | Taxonomic identifier, derived as lowercase `<genus>_<species>` - eg. `genus=Mandrillus`, `species=leucophaeus` → `species_id=mandrillus_leucophaeus`. Descriptive only - `accession_id`, not `species_id`, is the bucket path component. |
+| 8 | `genus` | Genus, capitalized (eg. `Mandrillus`) |
+| 9 | `species` | Species epithet, lowercase (eg. `leucophaeus`) |
+| 10 | `common_name` | Common species name |
+| 11 | `sex` | `male` / `female` / `unknown` |
+| 12 | `biosample` | NCBI BioSample accession |
+| 13 | `bioproject` | NCBI BioProject accession |
+| 14 | `assembly_status` | `planned` / `in_progress` / `released` |
+| 15 | `genome_hap1` | NCBI GenBank Assembly accession for the haplotype 1 assembly (e.g. `GCA_900000001.1`) — hosted at NCBI, not AWS. Blank until NCBI submission. View at `https://www.ncbi.nlm.nih.gov/datasets/genome/<accession>/` |
+| 16 | `genome_hap2` | NCBI GenBank Assembly accession for the haplotype 2 assembly (e.g. `GCA_900000002.1`) — hosted at NCBI, not AWS. Blank until NCBI submission. View at `https://www.ncbi.nlm.nih.gov/datasets/genome/<accession>/` |
+| 17 | `genome_pri` | S3 path to the primary assembly (longer sequence per chromosome pair; see [Primary + alternate assembly](#bucket-layout-and-download) below) |
+| 18 | `genome_alt` | S3 path to the alternate assembly (shorter sequence per chromosome pair) |
+| 19 | `genome_unplaced` | S3 path to unplaced/unscaffolded contigs not assigned to the primary or alternate assembly |
+| 20 | `genome_combined` | S3 path to a single combined FASTA (`hap1` + `hap2` + unphased/unplaced sequence) - see [Combined genome](#combined-genome) below |
+| 21 | `annotation_pri_gff3` | S3 path to gene annotation, called on the primary assembly |
+| 22 | `annotation_alt_gff3` | S3 path to gene annotation, lifted over onto the alternate assembly |
+| 23 | `annotation_hap1_gff3` | S3 path to gene annotation, deconstructed from the primary and alternate annotations |
+| 24 | `annotation_hap2_gff3` | S3 path to gene annotation, deconstructed from the primary and alternate annotations |
+| 25 | `repeat_masker_pri` | S3 path to RepeatMasker output, called on the primary assembly |
+| 26 | `repeat_masker_alt` | S3 path to RepeatMasker output, called on the alternate assembly |
+| 27 | `repeat_masker_hap1` | S3 path to RepeatMasker output, deconstructed from primary and alternate genomes |
+| 28 | `repeat_masker_hap2` | S3 path to RepeatMasker output, deconstructed from primary and alternate genomes |
+| 29 | `repeat_families` | S3 path to the RepeatModeler-generated novel repeat family consensus library (FASTA) for this assembly - one consensus sequence per family; headers follow RepeatModeler's `family_name#class/family` convention (e.g. `ltr-1_family-1#LTR/ERVK`). Useful on its own for examining this species' novel repeat families, independent of Dfam. |
+| 30 | `repeat_families_combined` | S3 path to `repeat_families` merged with the Dfam Primates partition - this combined library, not `repeat_families` alone, is what was actually used as RepeatMasker's custom library to produce the `repeat_masker_*` columns above. Built by extracting the curated Dfam Primates library (`famdb.py`), searching the RepeatModeler families against it with RepeatMasker, dropping any family ≥80% covered by an existing Dfam match (redundant) or implausibly long for its class (composite/misassembled), and merging the remaining novel families with Dfam Primates. |
+| 31 | `proteins_pri` | S3 path to predicted protein sequences (FASTA) from the primary-assembly gene annotation |
+| 32 | `proteins_alt` | S3 path to predicted protein sequences (FASTA) from the alternate-assembly gene annotation |
+| 33 | `proteins_hap1` | S3 path to predicted protein sequences (FASTA) from the haplotype 1 gene annotation |
+| 34 | `proteins_hap2` | S3 path to predicted protein sequences (FASTA) from the haplotype 2 gene annotation |
+| 35 | `segmental_duplications_pri` | S3 path to segmental duplication calls (BED) on the primary assembly |
+| 36 | `segmental_duplications_alt` | S3 path to segmental duplication calls (BED) on the alternate assembly |
+| 37 | `segmental_duplications_hap1` | S3 path to segmental duplication calls (BED) on the haplotype 1 assembly |
+| 38 | `segmental_duplications_hap2` | S3 path to segmental duplication calls (BED) on the haplotype 2 assembly |
+| 39 | `methylation` | S3 path to the ONT-based methylation output **directory** for this version (5mC/5hmC calls) - see [Methylation](#methylation) below |
+| 40 | `fiberseq` | S3 path to the Fiber-seq output **directory** for this version (m6A, MSPs, nucleosome calls) - see [Fiber-seq](#fiber-seq) below |
+| 41 | `variants` | S3 path to the variant calls **directory** for this version (see the file-naming table below for what's inside) |
+| 42 | `raw_ont` | Semicolon-delimited list of S3 paths to ONT run file(s) used for this version |
+| 43 | `raw_pacbio_hifi` | Semicolon-delimited list of S3 paths to PacBio HiFi run file(s) used for this version |
+| 44 | `raw_chromatin_capture` | Semicolon-delimited list of SRA run accessions for chromatin capture run(s) used for this version — reads are archived at NCBI/SRA (FASTQ), not hosted on AWS. See [Chromatin Capture](#chromatin-capture-omni-c--pore-c) below |
+| 45 | `raw_kinnex_rna` | Semicolon-delimited list of S3 paths to Kinnex RNA run file(s) used for this version |
+| 46 | `alignment_reads` | Semicolon-delimited list of S3 paths to the ONT/HiFi/Kinnex reads aligned against the assembly (`.ont.bam`, `.hifi.bam`, `.kinnex.bam`) |
+| 47 | `alignment_comparative` | S3 path to the comparative (MAF) alignment - see [Comparative and multi-species data](#comparative-and-multi-species-data) below |
 
 Samples with no released version yet (`assembly_status` = `planned` or `in_progress`) have a single row with `genome_id`, `genome_version`, `is_latest`, and all data-path columns blank.
 
@@ -69,7 +87,7 @@ Every version a sample has ever had ships as its own row - nothing is overwritte
 # Pull the manifest and list every currently-latest released genome's ID and S3 path (primary assembly)
 aws s3 cp --no-sign-request \
   s3://panprimate-t2t/manifests/sample_data_manifest.csv - \
-  | awk -F, '$13 == "released" && $4 == "TRUE" { print $1, $16 }'
+  | awk -F, '$14 == "released" && $4 == "TRUE" { print $1, $17 }'
 
 # List every version that has ever existed for one sample
 aws s3 cp --no-sign-request \
@@ -86,7 +104,7 @@ All indexed files (BAM `.bai`, bgzip VCF/GFF3/BED `.tbi`, bgzip FASTA `.fai`) su
 ```bash
 # A region of aligned reads
 samtools view \
-  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v1.0/alignments/PR00232_1.0.hifi.sorted.bam \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v1.0/alignments/PR00232_1.0.hifi.bam \
   chr7:1000000-1050000
 
 # The same region's variant calls
@@ -96,7 +114,7 @@ bcftools view \
 
 # The same region's gene annotation (primary assembly)
 tabix \
-  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v1.0/annotation/PR00232_1.0.pri.gff3.gz \
+  https://panprimate-t2t.s3.amazonaws.com/species_data/PR00232/v1.0/annotation/PR00232_1.0.genes.pri.gff3.gz \
   chr7:1000000-1050000
 ```
 
@@ -149,8 +167,8 @@ s3://panprimate-t2t/
         │   └── <accession_id>_sample_metadata.json
         │
         ├── v1.0/                        # Assembly release 1.0
-        │   ├── assembly/                # primary/alternate FASTA files, QC
-        │   ├── annotation/              # GFF3 gene models (pri + alt), RepeatMasker + repeat family output
+        │   ├── assembly/                # primary/alternate/unplaced/combined FASTA files, QC
+        │   ├── annotation/              # GFF3 gene models (pri/alt/hap1/hap2), RepeatMasker, repeat family (novel + combined), proteins, segmental duplications
         │   ├── variants/                # VCF files
         │   ├── alignments/              # Reads aligned to the v1.0 assembly
         │   ├── methylation/             # methylation calls
@@ -169,49 +187,60 @@ s3://panprimate-t2t/
 
 Raw sequencing is generated once per sample and never re-derived per assembly version, so it lives outside the `v*/` directories. Everything version-specific - the assembly itself and everything built from it (annotation, variant calls, read alignments, methylation, Fiber-seq) - is fully contained within its own `v<major>.<minor>/` directory, so two versions never overwrite or depend on each other.
 
-**Version-specific files are named with the full `genome_id`, not just `accession_id`:**
+**Version-specific files are named with the full `genome_id`, not just `accession_id`, and use the `.fasta.gz` extension (not `.fa.gz`):**
 
 | File | Pattern | Example |
 | --- | --- | --- |
-| Primary assembly | `<genome_id>.pri.fa.gz` | `PR00232_1.1.pri.fa.gz` |
-| Alternate assembly | `<genome_id>.alt.fa.gz` | `PR00232_1.1.alt.fa.gz` |
-| Gene annotation (primary) | `<genome_id>.pri.gff3.gz` | `PR00232_1.1.pri.gff3.gz` |
-| Gene annotation (alternate, lifted over) | `<genome_id>.alt.gff3.gz` | `PR00232_1.1.alt.gff3.gz` |
-| Repeat family consensus library | `<genome_id>.repeat_families.fasta.gz` | `PR00232_1.1.repeat_families.fasta.gz` |
+| Primary assembly | `<genome_id>.pri.fasta.gz` | `PR00232_1.1.pri.fasta.gz` |
+| Alternate assembly | `<genome_id>.alt.fasta.gz` | `PR00232_1.1.alt.fasta.gz` |
+| Unplaced/unscaffolded contigs | `<genome_id>.unplaced.fasta.gz` | `PR00232_1.1.unplaced.fasta.gz` |
+| Combined genome (hap1+hap2+unplaced) | `<genome_id>.combined.fasta.gz` | `PR00232_1.1.combined.fasta.gz` |
+| Gene annotation (primary) | `<genome_id>.genes.pri.gff3.gz` | `PR00232_1.1.genes.pri.gff3.gz` |
+| Gene annotation (alternate, lifted over) | `<genome_id>.genes.alt.gff3.gz` | `PR00232_1.1.genes.alt.gff3.gz` |
+| Gene annotation (hap1, hap2, lifted over) | `<genome_id>.genes.hap1.gff3.gz` / `.genes.hap2.gff3.gz` | `PR00232_1.1.genes.hap1.gff3.gz` |
+| RepeatMasker output (pri/alt/hap1/hap2) | `<genome_id>.repeat_masker.<pri\|alt\|hap1\|hap2>.out.gz` | `PR00232_1.1.repeat_masker.pri.out.gz` |
+| Novel repeat family consensus library | `<genome_id>.repeat_families.fasta.gz` | `PR00232_1.1.repeat_families.fasta.gz` |
+| Combined repeat library (novel + Dfam Primates) | `<genome_id>.repeat_families_combined.fasta.gz` | `PR00232_1.1.repeat_families_combined.fasta.gz` |
+| Predicted proteins (pri/alt/hap1/hap2) | `<genome_id>.proteins.<pri\|alt\|hap1\|hap2>.fasta.gz` | `PR00232_1.1.proteins.pri.fasta.gz` |
+| Segmental duplications (pri/alt/hap1/hap2) | `<genome_id>.SD.<pri\|alt\|hap1\|hap2>.bed.gz` | `PR00232_1.1.SD.pri.bed.gz` |
 | Variant calls | `<genome_id>.vcf.gz` | `PR00232_1.1.vcf.gz` |
-| Read alignment | `<genome_id>.hifi.sorted.bam` | `PR00232_1.1.hifi.sorted.bam` |
+| Read alignment | `<genome_id>.<ont\|hifi\|kinnex>.bam` | `PR00232_1.1.hifi.bam` |
 
-**Haplotype assemblies (`hap1`/`hap2`) are archived at NCBI, not hosted on AWS.** Following the same `<genome_id>.hap1.fa.gz` / `<genome_id>.hap2.fa.gz` naming pattern, they're submitted to NCBI as part of each release rather than duplicated in this bucket — see [NCBI cross-reference](#ncbi-cross-reference) below for how to locate them via the manifest's `biosample`/`bioproject` columns.
+**Haplotype assemblies (`hap1`/`hap2`) are archived at NCBI, not hosted on AWS.** They're submitted to NCBI as part of each release rather than duplicated in this bucket — see [NCBI cross-reference](#ncbi-cross-reference) below for how to locate them via the manifest's `biosample`/`bioproject` columns. Annotation products *called against* `hap1`/`hap2` (gene models, RepeatMasker, proteins, segmental duplications) are hosted on AWS even though the underlying haplotype FASTA is not - see the manifest columns above.
 
 **Primary + alternate assembly:** For annotation purposes and analyses that require only a single haplotype per genome, we also generate a primary (`pri`) and alternate (`alt`) assembly. For each autosome pair, the longer of the two haplotype sequences becomes the primary chromosome, and the shorter becomes the alternate. eg. if `chr1_hap1` is longer than `chr1_hap2`, then `chr1_pri` = `chr1_hap1` and `chr1_alt` = `chr1_hap2`. Sex chromosomes (X and/or Y, whichever are present in the sequenced individual) are included in the primary assembly only. Unlike `hap1`/`hap2`, the primary/alternate assemblies are hosted here on AWS.
 
-Unplaced/unscaffolded contigs are not included in the primary or alternate assembly - they remain only in the haplotype assemblies (`hap1`/`hap2`). Each haplotype includes its own complete set of unscaffolded contigs; unphased contigs (those that couldn't be assigned to either haplotype) are included in `hap1` only, not `hap2`.
+Unplaced/unscaffolded contigs are not included in the primary or alternate assembly - they remain only in the haplotype assemblies (`hap1`/`hap2`) and in `genome_unplaced`. Each haplotype includes its own complete set of unscaffolded contigs; unphased contigs (those that couldn't be assigned to either haplotype) are included in `hap1` only, not `hap2`.
 
-Annotation is called on the primary assembly and lifted over onto the alternate assembly - `annotation_pri_gff3` is the primary gene-model call, `annotation_alt_gff3` is derived from it via liftover, not called independently. Neither `hap1` nor `hap2` receives a standalone annotation; instead, their annotations are extracted from the primary and alternate sets.
+### Combined genome
+
+`genome_combined` (`<genome_id>.combined.fasta.gz`) is a single FASTA containing `hap1` + `hap2` + unphased/unplaced sequence together - the reference all raw reads (ONT/HiFi/Kinnex) are aligned against, and the file to use for whole-genome, haplotype-aware streaming access to a sample's reads. Unlike the primary/alternate split (which resolves each chromosome pair down to one sequence), the combined genome keeps both haplotypes' full sequence present. It has its own `.fai`/`.gzi` sidecars for bgzip byte-range access, same as the other indexed files described in [AWS Access & Compute](#aws-access--compute).
+
+Annotation is called on the primary assembly and lifted over onto the alternate assembly - `annotation_pri_gff3` is the primary gene-model call, `annotation_alt_gff3` is derived from it via liftover, not called independently. `annotation_hap1_gff3`/`annotation_hap2_gff3` are deconstructed from the primary and alternate annotations (recombined back onto each haplotype's own sequence), not called independently either.
 
 Note: `hap1`/`hap2` labels follow the assembler's own haplotype assignment (Verkko/hifiasm) and carry no inherent meaning - `hap1` is not consistently the larger, primary-leaning, or otherwise "preferred" haplotype across samples. `pri`/`alt` is the only pairing where "which one is longer" is meaningful per chromosome; treat `hap1`/`hap2` purely as an arbitrary assembler label.
 
-**Raw file storage:** each sequencing run is stored as its own file, named `<accession_id>_<platform>_run<N>.<ext>` (eg. `PR00232_hifi_run1.bam`) inside that platform's directory - runs are **never merged** into a single combined file. When new sequencing arrives for a platform, it's added as a new `run<N>` file alongside the existing ones; nothing is ever overwritten or replaced. A sample can have multiple run files per platform sitting in the same directory. The manifest's `raw_*` columns record exactly which run file(s) fed a given assembly version as a colon-delimited list (see above) - this is how "which combination of files" is answered without needing a separate lookup.
+**Raw file storage:** each sequencing run is stored as its own file, named `<accession_id>_<platform>_run<N>.<ext>` (eg. `PR00232_hifi_run1.bam`) inside that platform's directory - runs are **never merged** into a single combined file. When new sequencing arrives for a platform, it's added as a new `run<N>` file alongside the existing ones; nothing is ever overwritten or replaced. A sample can have multiple run files per platform sitting in the same directory. The manifest's `raw_*` columns record exactly which run file(s) fed a given assembly version as a semicolon-delimited list (see above) - this is how "which combination of files" is answered without needing a separate lookup.
 
-**Chromatin capture is archived at NCBI/SRA, not hosted on AWS:** unlike HiFi, ONT, and Kinnex, chromatin capture (Hi-C/Omni-C/Pore-C) reads are not part of this bucket - they're submitted to SRA as paired-end FASTQ (R1/R2), consistent with this being short-read sequencing rather than the single-molecule long-read platforms hosted here. The `raw_chromatin_capture` manifest column holds the SRA run accession for each run (colon-delimited if multiple), not an S3 path.
+**Chromatin capture is archived at NCBI/SRA, not hosted on AWS:** unlike HiFi, ONT, and Kinnex, chromatin capture (Hi-C/Omni-C/Pore-C) reads are not part of this bucket - they're submitted to SRA as paired-end FASTQ (R1/R2), consistent with this being short-read sequencing rather than the single-molecule long-read platforms hosted here. The `raw_chromatin_capture` manifest column holds the SRA run accession for each run (semicolon-delimited if multiple), not an S3 path.
 
 **Every run also ships a bgzip-compressed FASTQ alongside its native file** - `<accession_id>_<platform>_run<N>.fastq.gz` sits next to `..._run<N>.bam` (or `.pod5`) in the same directory, sharing the same `run_id`. This isn't a separate manifest entry: since it's always the same basename with a different extension, it's fully implied by the `raw_*` path already in the manifest - swap the extension to get it. FASTQ files are provided, especially for ONT, for tools that can only make use of this data type or to allow direct streaming of sequence data.
 
 **Why not merge runs into one file per platform?** Merging (eg. `pod5 merge`) would mean re-storing every prior run's data again each time new data arrives - at this dataset's scale, that duplicates multi-TB files repeatedly for no benefit. Assembly and basecalling tools (hifiasm, verkko, dorado) all accept multiple input files natively, so there's no processing reason to pre-merge; a user who wants one combined file can merge on demand from the exact run files listed in the manifest.
 
-**How this interacts with region-based streaming:** the byte-range/streaming examples in [AWS Access & Compute](#aws-access--compute) apply to **indexed, per-version outputs** (`alignments/`, `variants/`, `annotation/`) - files with a `.bai`/`.tbi`/`.fai` index built for genomic-coordinate lookup. Raw sequencing was never part of that pattern: it isn't aligned to anything yet, so there's no coordinate to seek to. Consuming raw data means fetching the specific run file(s) you need (from the manifest's colon-delimited list) and feeding them to a processing tool as a file list - not a byte-range query. These are two different access patterns for two different kinds of file, not a limitation introduced by storing multiple runs per platform.
+**How this interacts with region-based streaming:** the byte-range/streaming examples in [AWS Access & Compute](#aws-access--compute) apply to **indexed, per-version outputs** (`alignments/`, `variants/`, `annotation/`) - files with a `.bai`/`.tbi`/`.fai` index built for genomic-coordinate lookup. Raw sequencing was never part of that pattern: it isn't aligned to anything yet, so there's no coordinate to seek to. Consuming raw data means fetching the specific run file(s) you need (from the manifest's semicolon-delimited list) and feeding them to a processing tool as a file list - not a byte-range query. These are two different access patterns for two different kinds of file, not a limitation introduced by storing multiple runs per platform.
 
 ## PacBio HiFi
 
-`raw_sequencing/pacbio_hifi/<accession_id>_hifi_run<N>.bam` (+ `..._run<N>.fastq.gz`) - unaligned HiFi reads, one file per run (never merged). The primary assembly input for Verkko/hifiasm, which accept multiple run files directly. Coordinate-sorted alignment against a specific assembly version is at `species_data/<accession_id>/<version>/alignments/<genome_id>.hifi.sorted.bam` (+ `.bai`).
+`raw_sequencing/pacbio_hifi/<accession_id>_hifi_run<N>.bam` (+ `..._run<N>.fastq.gz`) - unaligned HiFi reads, one file per run (never merged). The primary assembly input for Verkko/hifiasm, which accept multiple run files directly. Coordinate-sorted alignment against a specific assembly version is at `species_data/<accession_id>/<version>/alignments/<genome_id>.hifi.bam` (+ `.bai`).
 
 ## ONT
 
-`raw_sequencing/ont/<accession_id>_ont_run<N>.pod5` (+ `..._run<N>.fastq.gz` **derived** basecalled) - raw signal per run, not just basecalled reads, so the data supports basecaller/methylation-model benchmarking directly. Basecalling tools (eg. `dorado`) accept a directory or list of POD5 files natively; the FASTQ is provided as a convenience for tools that need basecalled reads directly rather than raw signal. Basecalling model and version used for the shipped calls, if any accompany the POD5, are noted per-run in `metadata/<accession_id>_sample_metadata.json` (`sequencing.ont[N].chemistry`, matched by `run_id`).
+`raw_sequencing/ont/<accession_id>_ont_run<N>.pod5` (+ `..._run<N>.fastq.gz` **derived** basecalled) - raw signal per run, not just basecalled reads, so the data supports basecaller/methylation-model benchmarking directly. Basecalling tools (eg. `dorado`) accept a directory or list of POD5 files natively; the FASTQ is provided as a convenience for tools that need basecalled reads directly rather than raw signal. Basecaller model, modbase model, flow cell ID, and dorado basecaller/aligner versions used for the shipped calls are noted per-run in `metadata/<accession_id>_sample_metadata.json` (`sequencing.ont[N]`, matched by `run_id`) - see [Sample metadata](#sample-metadata) for the full field list.
 
 ## Chromatin Capture (Omni-C / Pore-C)
 
-Chromatin capture (Hi-C/Omni-C/Pore-C) reads are used for YaHS scaffolding to chromosome scale, but - unlike every other raw sequencing type in this dataset - **the reads themselves are not hosted on AWS**. They're archived at NCBI/SRA as paired-end FASTQ (R1/R2), consistent with publication requirements, rather than duplicated in this bucket. The `raw_chromatin_capture` manifest column holds the SRA run accession (colon-delimited if a version incorporated multiple runs) rather than an S3 path. The actual method and kit/protocol version per run are recorded in metadata (`sequencing.chromatin_capture[N].method`, `sequencing.chromatin_capture[N].kit_version`) - the directory and manifest column are method-agnostic since the project currently uses **Omni-C** but may use **Pore-C** or other chromatin capture methods for future species.
+Chromatin capture (Hi-C/Omni-C/Pore-C) reads are used for YaHS scaffolding to chromosome scale, but - unlike every other raw sequencing type in this dataset - **the reads themselves are not hosted on AWS**. They're archived at NCBI/SRA as paired-end FASTQ (R1/R2), consistent with publication requirements, rather than duplicated in this bucket. The `raw_chromatin_capture` manifest column holds the SRA run accession (semicolon-delimited if a version incorporated multiple runs) rather than an S3 path. The actual method and kit/protocol version per run are recorded in metadata (`sequencing.chromatin_capture[N].method`, `sequencing.chromatin_capture[N].kit_version`) - the directory and manifest column are method-agnostic since the project currently uses **Omni-C** but may use **Pore-C** or other chromatin capture methods for future species.
 
 ## Kinnex RNA
 
@@ -234,10 +263,32 @@ Every sample has a full metadata record at `metadata/<accession_id>_sample_metad
   "species_id": "mandrillus_leucophaeus",
   "accession_id": "PR00232",
   "sex": "male",
+  "ncbi_biosample": "SAMN00000001",
+  "bioproject": "PRJNA0000000",
   "sequencing": {
     "ont": [
-      { "run_id": "run1", "instrument": "PromethION 24", "chemistry": "R10.4.1", "run_accession": "SRR00000010" },
-      { "run_id": "run2", "instrument": "PromethION 2 Solo", "chemistry": "R10.4.1", "run_accession": "SRR00000014" }
+      {
+        "run_id": "run1",
+        "instrument": "PromethION 24",
+        "chemistry": "R10.4.1",
+        "run_accession": "SRR00000010",
+        "basecaller_model": "dna_r10.4.1_e8.2_400bps_sup@v5.0.0",
+        "modbase_model": "dna_r10.4.1_e8.2_400bps_sup@v5.0.0_5mC_5hmC@v1",
+        "flow_cell_id": "PAU00000",
+        "dorado_basecaller_version": "0.7.3+6e6c45c",
+        "dorado_aligner_version": "2.1.1+d66c17c"
+      },
+      {
+        "run_id": "run2",
+        "instrument": "PromethION 2 Solo",
+        "chemistry": "R10.4.1",
+        "run_accession": "SRR00000014",
+        "basecaller_model": "dna_r10.4.1_e8.2_400bps_sup@v5.0.0",
+        "modbase_model": "dna_r10.4.1_e8.2_400bps_sup@v5.0.0_5mC_5hmC@v1",
+        "flow_cell_id": "PAU00001",
+        "dorado_basecaller_version": "0.7.3+6e6c45c",
+        "dorado_aligner_version": "2.1.1+d66c17c"
+      }
     ],
     "pacbio_hifi": [
       { "run_id": "run1", "instrument": "Revio", "chemistry": "SMRTbell prep kit 3.0", "run_accession": "SRR00000011" }
@@ -248,10 +299,13 @@ Every sample has a full metadata record at `metadata/<accession_id>_sample_metad
     "kinnex_rna": [
       { "run_id": "run1", "instrument": "Revio", "run_accession": "SRR00000013" }
     ]
-  },
-  "ncbi_biosample": "SAMN00000001"
+  }
 }
 ```
+
+`bioproject` and `ncbi_biosample` are top-level fields alongside `species_id`/`accession_id`/`sex`, since they describe the sample as a whole, not a specific platform or run.
+
+For ONT, the raw `@RG`/`@PG` BAM header fields are captured per run rather than just a simplified `chemistry` string: `basecaller_model` and `modbase_model` are dorado's basecall/modbase config strings (from `@RG DS:basecall_model=`/`modbase_models=`), `flow_cell_id` is the ONT flow cell ID (`@RG PU:`), and `dorado_basecaller_version`/`dorado_aligner_version` come from the `@PG ID:basecaller VN:`/`@PG ID:aligner VN:` lines. `chemistry` itself is parsed out of `basecaller_model` (eg. `dna_r10.4.1_e8.2_...` → `R10.4.1`) for quick filtering. These fields can differ across runs for the same sample if a cell was basecalled with an older dorado version/model - that's expected and reflects genuine per-run provenance, not an error.
 
 Each `run_id` (`run1`, `run2`, ...) matches the `_run<N>` suffix in that platform's raw filenames, so a manifest path like `..._ont_run2.pod5` can be looked up directly against `sequencing.ont[1]` in this file for its instrument/chemistry/accession. New runs are appended to the relevant platform's list as they're generated - existing entries are never edited or removed.
 
